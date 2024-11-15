@@ -1,82 +1,111 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+
+import React, { useState, useEffect, useRef } from 'react';
 import './Select.css';
 
-const Select = ({ options, isMulti = false, isSearchable = false, placeholder = "Select...", onChange }) => {
+const Select = ({
+  label,
+  value,
+  onChange,
+  options = [],
+  multiple = false,
+  searchable = false,
+  placeholder = 'Select...',
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState(isMulti ? [] : null);
   const [searchTerm, setSearchTerm] = useState('');
-  const selectRef = useRef(null);
+  const [selectedValue, setSelectedValue] = useState(multiple ? [] : null);
 
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  const closeDropdown = () => setIsOpen(false);
+  const dropdownRef = useRef(null);
 
+  
+  useEffect(() => {
+    setSelectedValue(value);
+  }, [value]);
+
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (selectRef.current && !selectRef.current.contains(event.target)) {
-        closeDropdown();
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const toggleDropdown = () => setIsOpen(!isOpen);
+
   const handleOptionClick = (option) => {
-    if (isMulti) {
-      const updatedSelection = selectedOptions.includes(option)
-        ? selectedOptions.filter((item) => item !== option)
-        : [...selectedOptions, option];
-      setSelectedOptions(updatedSelection);
-      onChange && onChange(updatedSelection);
+    if (multiple) {
+      const isSelected = selectedValue.includes(option);
+      const updatedValue = isSelected
+        ? selectedValue.filter((item) => item !== option)
+        : [...selectedValue, option];
+      setSelectedValue(updatedValue);
+      onChange && onChange(updatedValue);
     } else {
-      setSelectedOptions(option);
+      setSelectedValue(option);
       onChange && onChange(option);
-      closeDropdown();
+      setIsOpen(false);
     }
   };
 
-  const handleSearch = (event) => setSearchTerm(event.target.value.toLowerCase());
+  const handleSearchChange = (event) => setSearchTerm(event.target.value);
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm)
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const renderSelectedValue = () => {
+    if (multiple) {
+      return selectedValue.length > 0
+        ? selectedValue.map((item) => item.label).join(', ')
+        : placeholder;
+    }
+    return selectedValue ? selectedValue.label : placeholder;
+  };
+
   return (
-    <div className="select-container" ref={selectRef}>
-      <div className="select-input" onClick={toggleDropdown}>
-        <span>
-          {isMulti
-            ? selectedOptions.length > 0
-              ? selectedOptions.map((opt) => opt.label).join(', ')
-              : placeholder
-            : selectedOptions
-            ? selectedOptions.label
-            : placeholder}
-        </span>
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
+    <div className="select-container" ref={dropdownRef}>
+      {label && <label className="select-label">{label}</label>}
+      <div className="select-display" onClick={toggleDropdown}>
+        <span>{renderSelectedValue()}</span>
+        <span className="select-arrow">{isOpen ? '▲' : '▼'}</span>
       </div>
       {isOpen && (
         <div className="select-dropdown">
-          {isSearchable && (
+          {searchable && (
             <input
               type="text"
+              className="select-search"
               placeholder="Search..."
               value={searchTerm}
-              onChange={handleSearch}
-              className="select-search"
+              onChange={handleSearchChange}
             />
           )}
           <ul className="select-options">
-            {filteredOptions?.map((option) => (
-              <li
-                key={option.value}
-                className={`select-option ${
-                  Array.isArray(selectedOptions) && selectedOptions.includes(option) ? 'selected' : ''
-                }`}
-                onClick={() => handleOptionClick(option)}
-              >
-                {option.label}
-              </li>
-            ))}
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <li
+                  key={option.value}
+                  className={`select-option ${
+                    multiple
+                      ? selectedValue.includes(option)
+                        ? 'selected'
+                        : ''
+                      : selectedValue === option
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() => handleOptionClick(option)}
+                >
+                  {option.label}
+                </li>
+              ))
+            ) : (
+              <li className="select-no-options">No options found</li>
+            )}
           </ul>
         </div>
       )}

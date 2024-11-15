@@ -1,7 +1,7 @@
-import React from 'react';
-import Select from '../components/select/Select';
-import './Home.css'
 
+import React, { useState } from 'react';
+import './Home.css';
+import Select from '../components/select/Select';
 
 const options = [
   { label: 'Option 1', value: '1' },
@@ -10,24 +10,45 @@ const options = [
   { label: 'Option 4', value: '4' },
 ];
 
-const Home = () => {
-    const handleSingleSelectChange = (selectedOption) => {
-        console.log('Single Selected:', selectedOption);
-      };
-    
-      const handleMultiSelectChange = (selectedOptions) => {
-        console.log('Multi Selected:', selectedOptions);
-      };
+function Home() {
+  const [singleValue, setSingleValue] = useState(null);
+  const [multiValue, setMultiValue] = useState([]);
 
-    return (
-       <div className="container">
-      <h2>Single Select</h2>
-      <Select options={options} onChange={handleSingleSelectChange} placeholder="Select an option" />
+  const handleSingleChange = (value) => {
+    setSingleValue(value);
+    console.log('Single Select Value:', value);
+  };
 
-      <h2>Multi Select</h2>
-      <Select options={options} isMulti onChange={handleMultiSelectChange} placeholder="Select multiple options" isSearchable />
+  const handleMultiChange = (values) => {
+    setMultiValue(values);
+    console.log('Multi Select Values:', values);
+  };
+
+  return (
+    <div className="container">
+      <h2>Custom Select Component</h2>
+
+      <h3>Single Select</h3>
+      <Select
+        label="Single Select"
+        value={singleValue}
+        onChange={handleSingleChange}
+        options={options}
+        placeholder="Select an option"
+      />
+
+      <h3>Multi Select with Search</h3>
+      <Select
+        label="Multi Select"
+        value={multiValue}
+        onChange={handleMultiChange}
+        options={options}
+        multiple
+        searchable
+        placeholder="Select multiple options"
+      />
     </div>
-    );
-};
+  );
+}
 
 export default Home;
