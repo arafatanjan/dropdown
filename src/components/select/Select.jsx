@@ -69,7 +69,9 @@ const Select = ({ options, isMulti = false, isSearchable = false, placeholder = 
             {filteredOptions?.map((option) => (
               <li
                 key={option.value}
-                className={`select-option ${selectedOptions.includes(option) ? 'selected' : ''}`}
+                className={`select-option ${
+                  Array.isArray(selectedOptions) && selectedOptions.includes(option) ? 'selected' : ''
+                }`}
                 onClick={() => handleOptionClick(option)}
               >
                 {option.label}
